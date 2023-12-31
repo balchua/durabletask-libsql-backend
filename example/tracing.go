@@ -10,7 +10,7 @@ import (
 
 func ConfigureZipkinTracing() (*trace.TracerProvider, error) {
 	// Inspired by this sample: https://github.com/open-telemetry/opentelemetry-go/blob/main/example/zipkin/main.go
-	exp, err := zipkin.New("http://localhost:9400/api/v2/spans")
+	exp, err := zipkin.New("http://localhost:9411/api/v2/spans")
 	if err != nil {
 		return nil, err
 	}
