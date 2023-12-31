@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
+	"github.com/balchua/durabletask-libsql-sample/pkg/logging"
 	"github.com/balchua/durabletask-libsql/backend/libsql"
 	"github.com/microsoft/durabletask-go/backend"
 	"github.com/microsoft/durabletask-go/task"
@@ -28,39 +29,46 @@ var employees = []employee{
 }
 
 func main() {
+	// initialize the logger
+	logger := logging.NewSlogWrapper(logging.WithLogLevel(slog.LevelInfo))
 	// Create a new task registry and add the orchestrator and activities
-	r := task.NewTaskRegistry()
-	r.AddOrchestrator(ActivitySequenceOrchestrator)
-	r.AddActivity(GetEmployeeDetailById)
 
+	logger.InfoS("creating the task registry", "orchestrator", "ActivitySequenceOrchestrator")
+	r := task.NewTaskRegistry()
+	r.AddOrchestrator(SimpleOrchestration)
+	r.AddActivity(GetEmployeeDetailById)
 	// Init the client
 	ctx := context.Background()
-	logger := backend.DefaultLogger()
+	// logger := backend.DefaultLogger()
 	be := getBackend(logger)
 	client, worker, err := Init(ctx, r, be, logger)
 	if err != nil {
-		log.Fatalf("Failed to initialize the client: %v", err)
+		logger.ErrorS("Failed to initialize the client", "error", err)
+		panic(err)
 	}
 	defer worker.Shutdown(ctx)
 
 	// Start a new orchestration
 	id, err := client.ScheduleNewOrchestration(ctx, ActivitySequenceOrchestrator)
 	if err != nil {
-		log.Fatalf("Failed to schedule new orchestration: %v", err)
+		logger.ErrorS("Failed to schedule new orchestration", "error", err)
+		panic(err)
 	}
 
 	// Wait for the orchestration to complete
 	metadata, err := client.WaitForOrchestrationCompletion(ctx, id)
 	if err != nil {
-		log.Fatalf("Failed to wait for orchestration to complete: %v", err)
+		logger.ErrorS("Failed to wait for orchestration to complete", "error", err)
+		panic(err)
 	}
 	var emps []employee
 	json.Unmarshal([]byte(metadata.SerializedOutput), &emps)
 	// Print the results
-	log.Printf("Orchestration completed: %v", emps)
+	logger.Infof("Orchestration completed: %v", emps)
 	// // Cleanup the task hub
 	// if err := be.DeleteTaskHub(ctx); err != nil {
-	// 	log.Fatalf("Failed to delete task hub: %v", err)
+	// 	logger.ErrorS("Failed to delete task hub: %v", err)
+	// panic(err)
 	// }
 
 }
@@ -94,9 +102,9 @@ func Init(ctx context.Context, r *task.TaskRegistry, be backend.Backend, logger 
 	return taskHubClient, taskHubWorker, nil
 }
 
-// ActivitySequenceOrchestrator makes 2 activity calls in sequence and results the results
+// SimpleOrchestration makes 2 activity calls in sequence and results the results
 // as an array.
-func ActivitySequenceOrchestrator(ctx *task.OrchestrationContext) (any, error) {
+func SimpleOrchestration(ctx *task.OrchestrationContext) (any, error) {
 	var john employee
 	if err := ctx.CallActivity(GetEmployeeDetailById, task.WithActivityInput("1")).Await(&john); err != nil {
 		return nil, err

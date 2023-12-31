@@ -6,9 +6,9 @@ To learn more about durabletask-go, see [durabletask-go](https://github.com/micr
 
 2 ways to start using libsql server backend.
 
-a. Start an libsql server
+* The easiest to get started is to use turso cloud service.  See [turso](https://turso.io) for more information.
 
-b.  Use turso cloud service
+* Spin yp your own libsql server backend.  See [libsql](https://github.com/tursodatabase/libsql)
 
 ## Example
 
