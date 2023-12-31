@@ -2,6 +2,27 @@
 
 To learn more about durabletask-go, see [durabletask-go](https://github.com/microsoft/durabletask-go)
 
+What is durabletask-go?
+
+> The Durable Task Framework is a lightweight, embeddable engine for writing durable, fault-tolerant business logic (orchestrations) as ordinary code. 
+
+What is Libsql?
+
+> [libsql](https://github.com/tursodatabase/libsql) is an open source, open contribution fork of SQLite, created and maintained by Turso.
+> Features include:
+> * Embedded replicas that allow you to have replicated database inside your app.
+> * libSQL server for remote SQLite access, similar to PostgreSQL or MySQL
+> * Supports Rust, JavaScript, Python, Go, and more.
+> 
+> There are also various improvements and extensions to the core SQLite:
+> 
+> * ALTER TABLE extension for modifying column types and constraints
+> * Randomized ROWID
+> * WebAssembly User Defined Functions
+> * Pass down SQL string to virtual table implementation
+> * Virtual write-ahead log interface
+>
+
 ## Installation
 
 2 ways to start using libsql server backend.

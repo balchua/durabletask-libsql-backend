@@ -49,25 +49,23 @@ func main() {
 	}
 	defer worker.Shutdown(ctx)
 
-	for i := 0; i < 1000; i++ {
-		// Start a new orchestration
-		id, err := client.ScheduleNewOrchestration(ctx, SimpleOrchestration, api.WithInput(rand.Intn(100)))
-		if err != nil {
-			logger.ErrorS("Failed to schedule new orchestration", "error", err)
-			panic(err)
-		}
-
-		// Wait for the orchestration to complete
-		metadata, err := client.WaitForOrchestrationCompletion(ctx, id)
-		if err != nil {
-			logger.ErrorS("Failed to wait for orchestration to complete", "error", err)
-			panic(err)
-		}
-		var emps []employee
-		json.Unmarshal([]byte(metadata.SerializedOutput), &emps)
-		// Print the results
-		logger.Infof("Orchestration completed: %v", emps)
+	// Start a new orchestration
+	id, err := client.ScheduleNewOrchestration(ctx, SimpleOrchestration, api.WithInput(rand.Intn(100)))
+	if err != nil {
+		logger.ErrorS("Failed to schedule new orchestration", "error", err)
+		panic(err)
 	}
+
+	// Wait for the orchestration to complete
+	metadata, err := client.WaitForOrchestrationCompletion(ctx, id)
+	if err != nil {
+		logger.ErrorS("Failed to wait for orchestration to complete", "error", err)
+		panic(err)
+	}
+	var emps []employee
+	json.Unmarshal([]byte(metadata.SerializedOutput), &emps)
+	// Print the results
+	logger.Infof("Orchestration completed: %v", emps)
 	// // Cleanup the task hub
 	// if err := be.DeleteTaskHub(ctx); err != nil {
 	// 	logger.ErrorS("Failed to delete task hub: %v", err)
@@ -110,7 +108,7 @@ func Init(ctx context.Context, r *task.TaskRegistry, be backend.Backend, logger 
 func SimpleOrchestration(ctx *task.OrchestrationContext) (any, error) {
 	var input int
 	ctx.GetInput(&input)
-	slog.Debug("input", "value", input)
+	slog.Info("input", "value", input)
 
 	var john employee
 	if err := ctx.CallActivity(GetEmployeeDetailById, task.WithActivityInput("1")).Await(&john); err != nil {
@@ -121,7 +119,17 @@ func SimpleOrchestration(ctx *task.OrchestrationContext) (any, error) {
 		return nil, err
 	}
 
-	return []employee{john, lily}, nil
+	var jane employee
+	if err := ctx.CallActivity(GetEmployeeDetailById, task.WithActivityInput("2")).Await(&jane); err != nil {
+		return nil, err
+	}
+
+	var steven employee
+	if err := ctx.CallActivity(GetEmployeeDetailById, task.WithActivityInput("2")).Await(&steven); err != nil {
+		return nil, err
+	}
+
+	return []employee{john, lily, jane, steven}, nil
 }
 
 // GetEmployeeDetailById can be called by an orchestrator function and will return a friendly greeting.
