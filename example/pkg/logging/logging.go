@@ -28,6 +28,7 @@ func NewSlogWrapper(options ...Option) SlogWrapper {
 
 	w.logger = slog.New(slog.NewJSONHandler(os.Stdout, w.opts))
 
+	slog.SetDefault(w.logger)
 	return w
 }
 
@@ -38,12 +39,6 @@ type Option func(*SlogWrapper)
 func WithLogLevel(level slog.Level) Option {
 	return func(w *SlogWrapper) {
 		w.opts.Level = level
-	}
-}
-
-func WithSource() Option {
-	return func(w *SlogWrapper) {
-		w.opts.AddSource = true
 	}
 }
 
