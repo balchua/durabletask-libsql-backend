@@ -33,6 +33,19 @@ var employees = []employee{
 func main() {
 	// initialize the logger
 	logger := logging.NewSlogWrapper(logging.WithLogLevel(slog.LevelInfo))
+	// init the tracing
+	// Tracing can be configured independently of the orchestration code.
+	tp, err := ConfigureZipkinTracing()
+	if err != nil {
+		logger.ErrorS("Failed to create tracer", "tracing error", err)
+		panic(err)
+	}
+	defer func() {
+		if err := tp.Shutdown(context.Background()); err != nil {
+			logger.ErrorS("Failed to stop tracer", "tracing error", err)
+			panic(err)
+		}
+	}()
 	logger.InfoS("starting durable tasks", "orchestrator", "SimpleOrchestration")
 	// Create a new task registry and add the orchestrator and activities
 	r := task.NewTaskRegistry()
