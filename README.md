@@ -2,6 +2,8 @@
 
 To learn more about durabletask-go, see [durabletask-go](https://github.com/microsoft/durabletask-go)
 
+**This is a copy of the sqlite backend implementation with some minor changes to make it work with libsql.**
+
 What is durabletask-go?
 
 > The Durable Task Framework is a lightweight, embeddable engine for writing durable, fault-tolerant business logic (orchestrations) as ordinary code. 
