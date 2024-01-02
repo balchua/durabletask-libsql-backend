@@ -9,8 +9,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/balchua/durabletask-libsql-backend/backend/libsql"
 	"github.com/balchua/durabletask-libsql-sample/pkg/logging"
-	"github.com/balchua/durabletask-libsql/backend/libsql"
 	"github.com/microsoft/durabletask-go/api"
 	"github.com/microsoft/durabletask-go/backend"
 	"github.com/microsoft/durabletask-go/task"

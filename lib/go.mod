@@ -1,4 +1,4 @@
-module github.com/balchua/durabletask-libsql
+module github.com/balchua/durabletask-libsql-backend
 
 go 1.21.5
 
