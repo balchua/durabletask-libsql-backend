@@ -27,21 +27,26 @@ func NewOrchestration(be backend.Backend, logger backend.Logger) *Orchestration 
 	}
 }
 
-func (o *Orchestration) AddWorkflow(workflowName string, w Workflow) {
+func (o *Orchestration) AddWorkflow(workflowName string, w Workflow) error {
 	o.workflows[workflowName] = w
-	o.registerWorkflows(w)
+	return o.registerWorkflows(workflowName, w)
 }
 
-func (o *Orchestration) registerTasks(workflow Workflow) {
+func (o *Orchestration) registerTasks(workflow Workflow) error {
 	tasks := workflow.GetTasks()
 	for k, v := range tasks {
-		o.taskRegistry.AddActivityN(k, v)
+		if err := o.taskRegistry.AddActivityN(k, v); err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
-func (o *Orchestration) registerWorkflows(w Workflow) {
-	o.taskRegistry.AddOrchestrator(w.GetWorkflow())
-	o.registerTasks(w)
+func (o *Orchestration) registerWorkflows(workflowName string, w Workflow) error {
+	if err := o.taskRegistry.AddOrchestratorN(workflowName, w.GetWorkflow()); err != nil {
+		return err
+	}
+	return o.registerTasks(w)
 }
 
 func (o *Orchestration) initTaskHub(ctx context.Context) error {
@@ -74,6 +79,28 @@ func (o *Orchestration) Stop(ctx context.Context) error {
 	return o.taskHubWorker.Shutdown(ctx)
 }
 
-func (o *Orchestration) ScheduleWorkflow(ctx context.Context, workflowId string, arg ...api.NewOrchestrationOptions) (api.InstanceID, error) {
-	return o.taskHubClient.ScheduleNewOrchestration(ctx, workflowId, arg...)
+func (o *Orchestration) isValidWorkflow(workflowName string) bool {
+	if _, ok := o.workflows[workflowName]; !ok {
+		return false
+	}
+	return true
+}
+
+func (o *Orchestration) ScheduleWorkflow(ctx context.Context, workflowName string, arg ...api.NewOrchestrationOptions) (api.InstanceID, error) {
+	if o.isValidWorkflow(workflowName) {
+		return o.taskHubClient.ScheduleNewOrchestration(ctx, workflowName, arg...)
+	}
+	return "", ErrWorkflowNotFound
+}
+
+func (o *Orchestration) GetStatus(ctx context.Context, instanceID string) (string, error) {
+	var (
+		metadata *api.OrchestrationMetadata
+		err      error
+	)
+
+	if metadata, err = o.taskHubClient.FetchOrchestrationMetadata(ctx, api.InstanceID(instanceID)); err != nil {
+		return api.RUNTIME_STATUS_FAILED.String(), err
+	}
+	return metadata.RuntimeStatus.String(), nil
 }
