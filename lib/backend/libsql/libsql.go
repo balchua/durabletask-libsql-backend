@@ -26,68 +26,93 @@ var dropSchema string
 
 var emptyString string = ""
 
-type LibSqlOptions struct {
-	Host                     string
-	Scheme                   string
-	OrchestrationLockTimeout time.Duration
-	ActivityLockTimeout      time.Duration
-	DbUrl                    string
-}
+// type LibSqlOptions struct {
+// 	host                     string
+// 	scheme                   string
+// 	orchestrationLockTimeout time.Duration
+// 	activityLockTimeout      time.Duration
+// 	dbUrl                    string
+// }
 
-type Option func(f *LibSqlOptions)
+type LibSqlOptions func(*libsqlBackend)
 
 type libsqlBackend struct {
-	dsn        string
-	db         *sql.DB
-	workerName string
-	logger     backend.Logger
-	options    *LibSqlOptions
+	host                     string
+	scheme                   string
+	token                    string
+	orchestrationLockTimeout time.Duration
+	activityLockTimeout      time.Duration
+	dbUrl                    string
+	dsn                      string
+	db                       *sql.DB
+	workerName               string
+	logger                   backend.Logger
 }
 
-// NewLibSqlOptions creates a new options object for the libsql-server backend provider.
-//
-// Specify "" for filePath to connect to an localhost:8080 instance.
-func NewLibSqlOptions(scheme string, host string, token string,
-	orchestrationLockTimeout time.Duration,
-	activityLockTimeout time.Duration) *LibSqlOptions {
-	var dbUrl = fmt.Sprintf("%s://%s", scheme, host)
-	if token != "" {
-		dbUrl = fmt.Sprintf("%s?authToken=%s", dbUrl, token)
-	}
-	return &LibSqlOptions{
-		Scheme:                   scheme,
-		Host:                     host,
-		DbUrl:                    dbUrl,
-		OrchestrationLockTimeout: orchestrationLockTimeout,
-		ActivityLockTimeout:      activityLockTimeout,
+func WithScheme(scheme string) LibSqlOptions {
+	return func(be *libsqlBackend) {
+		be.scheme = scheme
 	}
 }
 
-// NewLibSqlBackend creates a new libsql based Backend object.
-func NewLibSqlBackend(opts *LibSqlOptions, logger backend.Logger) backend.Backend {
+func WithHost(host string) LibSqlOptions {
+	return func(be *libsqlBackend) {
+		be.host = host
+	}
+}
+
+func WithOrchestrationLockTimeout(timeout time.Duration) LibSqlOptions {
+	return func(be *libsqlBackend) {
+		be.orchestrationLockTimeout = timeout
+	}
+}
+
+func WithActivityLockTimeout(timeout time.Duration) LibSqlOptions {
+	return func(be *libsqlBackend) {
+		be.activityLockTimeout = timeout
+	}
+}
+
+func WithLogger(logger backend.Logger) LibSqlOptions {
+	return func(be *libsqlBackend) {
+		be.logger = logger
+	}
+}
+
+func WithToken(token string) LibSqlOptions {
+	return func(be *libsqlBackend) {
+		be.token = token
+	}
+}
+
+func generateWorkerId() string {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "unknown"
 	}
-
 	pid := os.Getpid()
 	uuidStr := uuid.NewString()
+	return fmt.Sprintf("%s,%d,%s", hostname, pid, uuidStr)
+}
+
+// NewLibSqlBackend creates a new libsql based Backend object.
+func NewLibSqlBackend(opts ...LibSqlOptions) backend.Backend {
+	workerId := generateWorkerId()
 
 	be := &libsqlBackend{
-		db:         nil,
-		workerName: fmt.Sprintf("%s,%d,%s", hostname, pid, uuidStr),
-		options:    opts,
-		logger:     logger,
+		db:                       nil,
+		workerName:               workerId,
+		host:                     "localhost:8080",
+		scheme:                   "http",
+		orchestrationLockTimeout: time.Duration(2 * time.Minute),
+		activityLockTimeout:      time.Duration(2 * time.Minute),
+		logger:                   backend.DefaultLogger(),
 	}
 
-	if opts == nil {
-		opts = NewLibSqlOptions("http", "localhost:8080", "", 2*time.Minute, 2*time.Minute)
+	for _, opt := range opts {
+		opt(be)
 	}
-	if opts.DbUrl == "" {
-		be.dsn = "http://localhost:8080"
-	} else {
-		be.dsn = opts.DbUrl
-	}
+	be.dsn = fmt.Sprintf("%s://%s", be.scheme, be.host)
 
 	return be
 }
@@ -745,7 +770,7 @@ func (be *libsqlBackend) GetOrchestrationWorkItem(ctx context.Context) (*backend
 	defer tx.Rollback()
 
 	now := time.Now().UTC()
-	newLockExpiration := now.Add(be.options.OrchestrationLockTimeout)
+	newLockExpiration := now.Add(be.orchestrationLockTimeout)
 
 	// Place a lock on an orchestration instance that has new events that are ready to be executed.
 	row := tx.QueryRowContext(
@@ -838,7 +863,7 @@ func (be *libsqlBackend) GetActivityWorkItem(ctx context.Context) (*backend.Acti
 	}
 
 	now := time.Now().UTC()
-	newLockExpiration := now.Add(be.options.OrchestrationLockTimeout)
+	newLockExpiration := now.Add(be.orchestrationLockTimeout)
 
 	row := be.db.QueryRowContext(
 		ctx,
@@ -988,5 +1013,5 @@ func (be *libsqlBackend) ensureDB() error {
 }
 
 func (be *libsqlBackend) String() string {
-	return fmt.Sprintf("host: %s://%s", be.options.Scheme, be.options.Host)
+	return fmt.Sprintf("host: %s://%s", be.scheme, be.host)
 }

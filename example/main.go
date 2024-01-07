@@ -7,7 +7,6 @@ import (
 	"log/slog"
 	"math/rand"
 	"os"
-	"time"
 
 	"github.com/balchua/durabletask-libsql-backend/lib/backend/libsql"
 	"github.com/balchua/durabletask-libsql-sample/pkg/logging"
@@ -79,11 +78,11 @@ func main() {
 	json.Unmarshal([]byte(metadata.SerializedOutput), &emps)
 	// Print the results
 	logger.Infof("Orchestration completed: %v", emps)
-	// // Cleanup the task hub
-	// if err := be.DeleteTaskHub(ctx); err != nil {
-	// 	logger.ErrorS("Failed to delete task hub: %v", err)
-	// 	panic(err)
-	// }
+	// Cleanup the task hub
+	if err := be.DeleteTaskHub(ctx); err != nil {
+		logger.ErrorS("Failed to delete task hub: %v", err)
+		panic(err)
+	}
 
 }
 
@@ -91,8 +90,9 @@ func getBackend(logger backend.Logger) backend.Backend {
 	token := os.Getenv("DURABLETASK_DEMO_DB_TOKEN")
 	host := os.Getenv("DURABLETASK_DEMO_DB_HOST")
 	scheme := os.Getenv("DURABLETASK_DEMO_DB_HOST_SCHEME")
+
 	// Use the libsql-server storage provider
-	return libsql.NewLibSqlBackend(libsql.NewLibSqlOptions(scheme, host, token, 20*time.Second, 20*time.Second), logger)
+	return libsql.NewLibSqlBackend(libsql.WithScheme(scheme), libsql.WithHost(host), libsql.WithLogger(logger), libsql.WithToken(token))
 }
 
 // Init creates and initializes an in-memory client and worker pair with default configuration.
@@ -127,20 +127,24 @@ func SimpleOrchestration(ctx *task.OrchestrationContext) (any, error) {
 	if err := ctx.CallActivity(GetEmployeeDetailById, task.WithActivityInput("1")).Await(&john); err != nil {
 		return nil, err
 	}
+	slog.Info("john's reponse", "value", john)
 	var lily employee
 	if err := ctx.CallActivity(GetEmployeeDetailById, task.WithActivityInput("4")).Await(&lily); err != nil {
 		return nil, err
 	}
+	slog.Info("lily's reponse", "value", lily)
 
 	var jane employee
 	if err := ctx.CallActivity(GetEmployeeDetailById, task.WithActivityInput("2")).Await(&jane); err != nil {
 		return nil, err
 	}
+	slog.Info("jane's reponse", "value", jane)
 
 	var steven employee
-	if err := ctx.CallActivity(GetEmployeeDetailById, task.WithActivityInput("2")).Await(&steven); err != nil {
+	if err := ctx.CallActivity(GetEmployeeDetailById, task.WithActivityInput("3")).Await(&steven); err != nil {
 		return nil, err
 	}
+	slog.Info("steven's reponse", "value", steven)
 
 	return []employee{john, lily, jane, steven}, nil
 }
@@ -151,6 +155,7 @@ func GetEmployeeDetailById(ctx task.ActivityContext) (any, error) {
 	if err := ctx.GetInput(&id); err != nil {
 		return nil, err
 	}
+	slog.Info("employee id", "value", id)
 
 	for i, e := range employees {
 		if e.Id == id {
