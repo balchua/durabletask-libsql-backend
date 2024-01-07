@@ -2,6 +2,8 @@ github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230512164433-5d1fd1a340c9 h
 github.com/antlr/antlr4/runtime/Go/antlr/v4 v4.0.0-20230512164433-5d1fd1a340c9/go.mod h1:pSwJ0fSY5KhvocuWSx4fz3BA8OrA1bQn+K1Eli3BRwM=
 github.com/balchua/durabletask-libsql-backend/lib v0.0.0-20240102003103-c75ad105705f h1:7CUwXg7mo6BpoZ4e+Hg0+ZzRI63LQRCDp4xb3GTNiKg=
 github.com/balchua/durabletask-libsql-backend/lib v0.0.0-20240102003103-c75ad105705f/go.mod h1:PJxvsYZjn9AIRrD66uE46KKwaxqjCk+lLofLKEBYihY=
+github.com/balchua/durabletask-libsql-backend/lib v0.0.0-20240107030958-d4da3d4d590d h1:/wkkYS0BvS2N5vLvfkp5qKjz7jvMtvUglf6vg+KAIJc=
+github.com/balchua/durabletask-libsql-backend/lib v0.0.0-20240107030958-d4da3d4d590d/go.mod h1:PJxvsYZjn9AIRrD66uE46KKwaxqjCk+lLofLKEBYihY=
 github.com/cenkalti/backoff/v4 v4.1.3 h1:cFAlzYUlVYDysBEH2T5hyJZMh3+5+WCBvSnK6Q8UtC4=
 github.com/cenkalti/backoff/v4 v4.1.3/go.mod h1:scbssz8iZGpm3xbr14ovlUdkxfGXNInqkPWOWmG2CLw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

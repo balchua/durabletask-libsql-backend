@@ -106,7 +106,7 @@ func NewLibSqlBackend(opts ...LibSqlOptions) backend.Backend {
 	dbUrl := fmt.Sprintf("%s://%s", be.scheme, be.host)
 
 	if be.token != "" {
-		dbUrl = fmt.Sprintf("%s?authtoken=%s", dbUrl, be.token)
+		dbUrl = fmt.Sprintf("%s?authToken=%s", dbUrl, be.token)
 	}
 	be.dsn = dbUrl
 

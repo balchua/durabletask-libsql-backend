@@ -3,7 +3,7 @@ module github.com/balchua/durabletask-libsql-sample
 go 1.21.5
 
 require (
-	github.com/balchua/durabletask-libsql-backend/lib v0.0.0-20240102003103-c75ad105705f
+	github.com/balchua/durabletask-libsql-backend/lib v0.0.0-20240107030958-d4da3d4d590d
 	github.com/microsoft/durabletask-go v0.4.0
 	go.opentelemetry.io/otel v1.21.0
 	go.opentelemetry.io/otel/exporters/zipkin v1.11.1
