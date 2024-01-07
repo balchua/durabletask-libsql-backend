@@ -26,14 +26,6 @@ var dropSchema string
 
 var emptyString string = ""
 
-// type LibSqlOptions struct {
-// 	host                     string
-// 	scheme                   string
-// 	orchestrationLockTimeout time.Duration
-// 	activityLockTimeout      time.Duration
-// 	dbUrl                    string
-// }
-
 type LibSqlOptions func(*libsqlBackend)
 
 type libsqlBackend struct {
@@ -42,7 +34,6 @@ type libsqlBackend struct {
 	token                    string
 	orchestrationLockTimeout time.Duration
 	activityLockTimeout      time.Duration
-	dbUrl                    string
 	dsn                      string
 	db                       *sql.DB
 	workerName               string
@@ -112,7 +103,12 @@ func NewLibSqlBackend(opts ...LibSqlOptions) backend.Backend {
 	for _, opt := range opts {
 		opt(be)
 	}
-	be.dsn = fmt.Sprintf("%s://%s", be.scheme, be.host)
+	dbUrl := fmt.Sprintf("%s://%s", be.scheme, be.host)
+
+	if be.token != "" {
+		dbUrl = fmt.Sprintf("%s?authtoken=%s", dbUrl, be.token)
+	}
+	be.dsn = dbUrl
 
 	return be
 }

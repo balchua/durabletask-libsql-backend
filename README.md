@@ -35,8 +35,9 @@ What is Libsql?
 
 ## Example
 
-The example code can be found in [example](example) folder.  The example code also features distributed tracing.
+The example code can be found in [example](example) folder.  
 
+The example code also features distributed tracing.
 ![tracing](example/assets/sample-traces.png)
 
 
